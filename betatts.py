@@ -3,7 +3,6 @@ import pandas as pd
 from pydub import AudioSegment
 import torch
 import librosa
-import sys
 import matplotlib
 from tacotron2.model import Tacotron2
 from tacotron2.loss_function import Tacotron2Loss
@@ -20,8 +19,6 @@ from tacotron2.data_utils import TextMelLoader, TextMelCollate
 import torch
 import torch.optim as optim
 import torchaudio
-from text import sequence_to_text
-import numpy as np
 import torch.cuda.amp as amp
 
 
@@ -47,8 +44,8 @@ hparams = Hparams(epochs=1000,
         cudnn_benchmark=False,
         ignore_layers=['embedding.weight'],
         load_mel_from_disk=False,
-        training_files="/media/cam/agi/gpt-Rogan/audio/audiofiles/segments/train.txt",
-        validation_files="/media/cam/agi/gpt-Rogan/audio/audiofiles/segments/val.txt",
+        training_files="audio/audiofiles/segments/train.txt",
+        validation_files="audio/audiofiles/segments/val.txt",
         text_cleaners=['english_cleaners'],
         max_wav_value=32768.0,
         sampling_rate=16000,
@@ -102,10 +99,10 @@ class JoeDetector(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.fresh = True
-        self.metadata_file = "/media/cam/agi/gpt-Rogan/audio/audiofiles/segments/train.txt"
-        self.checkpoint_path = "/media/cam/agi/gpt-Rogan/outdir"
-        self.wav_folder = "/media/cam/agi/gpt-Rogan/audio/audiofiles/wav"
-        self.segments = "/media/cam/agi/gpt-Rogan/audio/audiofiles/segments"
+        self.metadata_file = "audio/audiofiles/segments/train.txt"
+        self.checkpoint_path = "outdir"
+        self.wav_folder = "audio/audiofiles/wav"
+        self.segments = "audio/audiofiles/segments"
         self.trainpath=str(self.segments + "/" + "train.txt")
         self.valpath=str(self.segments + "/" + "val.txt")
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -164,11 +161,11 @@ class Tacotron2WaveglowTrainer:
     def __init__(self, hparams,fresh=True):
         self.hp = hparams
         self.fresh = fresh
-        self.metadata_file = "/media/cam/agi/gpt-Rogan/audio/audiofiles/segments/train.txt"
-        self.checkpoint_path = "/media/cam/agi/gpt-Rogan/models"
-        self.picklesfolder = "/media/cam/agi/gpt-Rogan/audio/audiofiles/parsed"
-        self.wav_folder = "/media/cam/agi/gpt-Rogan/audio/audiofiles/wav"
-        self.segments = "/media/cam/agi/gpt-Rogan/audio/audiofiles/segments"
+        self.metadata_file = "audio/audiofiles/segments/train.txt"
+        self.checkpoint_path = "models"
+        self.picklesfolder = "audio/audiofiles/parsed"
+        self.wav_folder = "audio/audiofiles/wav"
+        self.segments = "audio/audiofiles/segments"
         self.trainpath=str(self.segments + "/" + "train.txt")
         self.valpath=str(self.segments + "/" + "val.txt")
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -191,11 +188,11 @@ class Tacotron2WaveglowTrainer:
             return False
     def generate_data(self,picklefolder):
         detector=JoeDetector().to("cpu")
-        detector.load_state_dict(torch.load("/media/cam/agi/gpt-Rogan/models/joedet_2590.pt")['state_dict'])
+        detector.load_state_dict(torch.load("models/joedet_2590.pt")['state_dict'])
         if self.fresh==True:
-            for file in os.listdir("/media/cam/agi/gpt-Rogan/outdir"):
+            for file in os.listdir("outdir"):
                 if file.endswith(".pt"):
-                    os.remove("/media/cam/agi/gpt-Rogan/outdir" + "/" + file)
+                    os.remove("outdir" + "/" + file)
         #random file order
         for picklefile in os.listdir(picklefolder)[2:]:
             self.clear()
@@ -294,11 +291,11 @@ class Tacotron2WaveglowTrainer:
                 os.remove(self.segments + "/" + file)
             
 trainer=Tacotron2WaveglowTrainer(hparams,fresh=False)
-trainer.generate_data(picklefolder = "/media/cam/agi/gpt-Rogan/audio/audiofiles/parsed")
+trainer.generate_data(picklefolder = "audio/audiofiles/parsed")
     
 
 
-# subprocess.Popen(["ffplay", "-nodisp", "-autoexit", "/media/cam/agi/gpt-Rogan/audio/audiofiles/segments/6.wav"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+# subprocess.Popen(["ffplay", "-nodisp", "-autoexit", "audio/audiofiles/segments/6.wav"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
 # proceed = input("Proceed? (y/n)")
 # if proceed == "n":
 #     shutil.move(picklesfolder + "/" + picklefile, filterfolder + "/" + picklefile)
